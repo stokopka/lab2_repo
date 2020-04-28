@@ -55,21 +55,21 @@ class Lab2App(server.App):
             "label": "Enter the first week",
             "value": 25,
             "key": 'week1',
-            "action_id": "refresh"
+            "action_id": "update_data"
         }, {
             "input_type": "text",
             "variable_name": "week2",
             "label": "Enter the last week",
             "value": 35,
             "key": 'week2',
-            "action_id": "refresh"
+            "action_id": "update_date"
         }, {
             "input_type": "text",
             "variable_name": "year1",
             "label": "Enter the year:",
             "value": 1982,
             "key": "year1",
-            "action_id": "refresh"
+            "action_id": "update_data"
         }
     ]
 
@@ -113,7 +113,13 @@ class Lab2App(server.App):
     def getPlot(self, params):
         datatype = params['index']
         df = self.getData(params)
-        plt_obj = df.plot(x='week', y=datatype)
+        
+        plt_obj = df.plot(x='week', y=datatype,
+                          linestyle = '--',
+                          linewidth = 2,
+                          color = 'pink'
+                          )
+        
         plt_obj.set_ylabel(datatype)
         fig = plt_obj.get_figure()
         return fig
