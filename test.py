@@ -1,5 +1,4 @@
 from spyre import server
-import urllib3
 import numpy as numpy
 import pandas as pd
 import matplotlib.pyplot as plot
@@ -38,7 +37,7 @@ class Lab2App(server.App):
                     {"label": "Chernihiv", "value": 24},
                     {"label": "Crimea", "value": 25}],
         "variable_name": 'region',
-        "value": 25,
+        "value": 1,
         "action_id": "update_data"
     }, {
         "type": 'dropdown',
@@ -92,12 +91,25 @@ class Lab2App(server.App):
             "id": "plot_id",
             "tab": "Plot",
             "control_id": "update_data"
-        }
+        }, {
+            "type":"table",
+            "id": "table1_id",
+            "control_id":"update_data",
+            "tab":"Table1",
+            "on_page_load": True
+        }, {
+            "type": "plot",
+            "id":"plot1_id",
+            "control_id":"update_data",
+            "tab":"Plot1",
+            "on_page_load":True
+            }
+        
     ]
 
-    tabs = ["Plot", "Table"]
+    tabs = ["Plot", "Table","Plot1","Table1"]
 
-    def getData(self, params):
+    def table_id(self, params):
         index = str(params['index'])
         week1 = int(params['week1'])
         week2 = int(params['week2'])
@@ -106,21 +118,87 @@ class Lab2App(server.App):
 
         column = ['year', 'week','oblast' ,'SMN', 'SMT', 'VCI', 'TCI', 'VHI']
         df = pd.read_csv('final.csv', names=column)
-        return df.loc[(df['week'] >= int(week1)) & (df['year'] == int(year1)) & (df['week'] <= int(week2)) & (df['oblast'] == int(region))]
 
-
-
-    def getPlot(self, params):
-        datatype = params['index']
-        df = self.getData(params)
         
-        plt_obj = df.plot(x='week', y=datatype,
-                          linestyle = '--',
-                          linewidth = 2,
+        return df.loc[(df['week'] >= int(week1)) & (df['year'] == int(year1)) & (df['week'] <= int(week2)) & (df['oblast'] == int(region))]
+    
+
+    def table1_id(self, params):
+        column=['year', 'week', 'oblast', 'SMN','SMT', 'VCI','TCI','VHI']
+        df1 = pd.read_csv('final.csv', names=column)
+
+        df1.astype({'week':'int32'}).dtypes
+        df1.astype({'VHI':'float'}).dtypes
+      
+    
+
+	 
+        months1 = [1,2,3,4,5,6,7,8,9,10,11,12]
+	
+        for i in range(12):
+            if(months1[i]%3==0):
+                months1.extend(months1[i:(i+1)]*4)
+            else:
+                months1.extend(months1[i:(i+1)]*3)
+
+        months = sorted(months1)
+        
+        weeks = df1['week'].unique()
+            
+
+        all_min = []
+        all_max = []
+
+        for i in range(1,53):
+            vhi_min = df1[df1['week']==i]['VHI'].min()
+            vhi_max = df1[df1['week']==i]['VHI'].max()
+
+
+            all_min.append(vhi_min)
+            all_max.append(vhi_max)
+
+        print(type(all_max))
+        d2  = {"month": months, "vhi_min": all_min, "vhi_max":all_max}
+        df2 = pd.DataFrame(d2)
+        print(d2)
+        
+        df2 = df2.groupby(['month']).mean()
+        df2 = df2.reset_index()
+        #df2['month']=months
+        #df2['mon']= months1
+        print(df2)
+        return df2
+        
+        
+            
+    def plot_id(self, params):
+        index = params['index']
+        df = self.table_id(params)
+        
+        plt_obj = df.plot(x='week', y= index,
+                          linestyle = '-',
+                          linewidth = 3,
                           color = 'pink'
                           )
         
-        plt_obj.set_ylabel(datatype)
+        plt_obj.set_ylabel(index)
+        fig = plt_obj.get_figure()
+        return fig
+    
+
+    def plot1_id(self, params):
+    
+        months = [1,2,3,4,5,6,7,8,9,10,11,12]
+        
+        df = self.table1_id(params)
+        #print(df)
+        
+        plt_obj = df.plot(x='month',
+                          linestyle = '-',
+                          linewidth = 3
+                          
+                          )
+        
         fig = plt_obj.get_figure()
         return fig
 
